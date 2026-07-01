@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <!-- Google tag (gtag.js) -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-CN3WY49496"></script>
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-CN3WY49496');
+</script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carteira Assinada — Fevereiro de 2026</title>
+
+  <script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+
+  <style>
+    :root{
+      --azul:#183EFF;
+      --azul-card:#1F27FF;
+      --amarelo:#E6E30E;
+      --cinza:#E9E9E9;
+      --texto:#1E1E1E;
+
+      --norte:#FF2A2A;
+      --nordeste:#FFD400;
+      --centro:#00E000;
+      --sudeste:#FFA21A;
+      --sul:#1B57FF;
+    }
+
+    *{ box-sizing:border-box; }
+
+    body{
+      margin:0;
+      font-family: Arial, Helvetica, sans-serif;
+      background:var(--azul);
+    }
+
+    .caged-dashboard{
+      max-width:1100px;
+      margin:0 auto;
+      padding:0 16px 28px;
+      background:var(--azul);
+    }
+
+    .caged-topo{
+      width:100%;
+      margin:0 auto 14px;
+    }
+
+    .caged-topo img{
+      width:100%;
+      height:auto;
+      display:block;
+    }
+
+    .caged-main{
+      display:grid;
+      grid-template-columns:minmax(0, 1.45fr) minmax(260px, .95fr);
+      gap:14px;
+      align-items:start;
+    }
+
+    .caged-box{
+      background:var(--cinza);
+      border-radius:34px;
+      padding:18px 16px;
+    }
+
+    .caged-map-box h2{
+      margin:6px 0 14px;
+      text-align:center;
+      color:#111;
+      font-size:30px;
+      line-height:1;
+      font-weight:900;
+    }
+
+    .caged-region-tabs{
+      display:flex;
+      flex-wrap:wrap;
+      justify-content:center;
+      gap:8px;
+      margin-bottom:14px;
+    }
+
+    .caged-region-tabs button{
+      border:none;
+      border-radius:8px;
+      padding:6px 10px;
+      font-size:12px;
+      line-height:1;
+      color:#111;
+      cursor:pointer;
+      font-weight:700;
+      transition:.2s ease;
+    }
+
+    .caged-region-tabs button:hover{
+      transform:translateY(-1px);
+      opacity:.95;
+    }
+
+    .caged-region-tabs button.active{
+      box-shadow:0 0 0 2px #111 inset;
+    }
+
+    .reg-norte{ background:var(--norte); color:#fff; }
+    .reg-nordeste{ background:var(--nordeste); }
+    .reg-centro{ background:var(--centro); }
+    .reg-sudeste{ background:var(--sudeste); }
+    .reg-sul{ background:var(--sul); color:#fff; }
+
+    .caged-map-area{
+      width:100%;
+      min-height:540px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:4px;
+      overflow:hidden;
+    }
+
+    #map{
+      width:100%;
+      height:auto;
+      display:block;
+    }
+
+    .caged-side{
+      display:flex;
+      flex-direction:column;
+      gap:14px;
+    }
+
+    .caged-card{
+      min-height:255px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:flex-start;
+      text-align:center;
+      background:var(--cinza);
+      border-radius:28px;
+      padding:16px 16px 18px;
+    }
+
+    .caged-card h3{
+      margin:0 0 10px;
+      font-size:46px;
+      line-height:1;
+      font-weight:900;
+      color:var(--azul-card);
+    }
+
+    .caged-card .linha{
+      width:100%;
+      max-width:220px;
+      height:8px;
+      border-radius:999px;
+      background:var(--amarelo);
+      margin-bottom:12px;
+    }
+
+    .caged-card .nome{
+      min-height:70px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      text-align:center;
+      color:#252525;
+      font-size:34px;
+      line-height:1.02;
+      font-weight:400;
+      margin-bottom:12px;
+    }
+
+    .caged-card .valor{
+      color:var(--azul);
+      font-size:74px;
+      line-height:.92;
+      font-weight:900;
+      letter-spacing:-2px;
+    }
+
+    .caged-card .valor small{
+      display:block;
+      font-size:22px;
+      line-height:1;
+      margin-top:4px;
+      font-weight:800;
+      letter-spacing:0;
+    }
+
+    .caged-rodape{
+      display:flex;
+      justify-content:center;
+      margin-top:18px;
+    }
+
+    .caged-rodape img{
+      width:100%;
+      max-width:280px;
+      height:auto;
+      display:block;
+    }
+
+    .state{
+      cursor:pointer;
+      transition:opacity .18s ease, filter .18s ease;
+      transform-box:fill-box;
+      transform-origin:center;
+    }
+
+    .state:hover{
+      filter:brightness(1.05);
+    }
+
+    .state.dimmed{
+      opacity:.28;
+    }
+
+    .state.selected{
+      stroke:#111 !important;
+      stroke-width:2.4 !important;
+      filter:drop-shadow(0 0 8px rgba(0,0,0,.18));
+    }
+
+    .state-label{
+      font-size:15px;
+      font-weight:700;
+      text-anchor:middle;
+      fill:#2f2f2f;
+      pointer-events:none;
+    }
+
+    .empty-note{
+      padding:28px;
+      text-align:center;
+      color:#555;
+      font-weight:700;
+    }
+
+    @media (max-width: 980px){
+      .caged-main{
+        grid-template-columns:1fr;
+      }
+
+      .caged-side{
+        flex-direction:row;
+      }
+
+      .caged-card{
+        flex:1;
+        min-height:210px;
+      }
+
+      .caged-map-area{
+        min-height:480px;
+      }
+    }
+
+    @media (max-width: 768px){
+      .caged-dashboard{
+        padding:0 12px 22px;
+      }
+
+      .caged-topo{
+        margin-bottom:12px;
+      }
+
+      .caged-main{
+        gap:12px;
+      }
+
+      .caged-box{
+        border-radius:30px;
+        padding:16px 14px;
+      }
+
+      .caged-map-box h2{
+        font-size:24px;
+        margin:6px 0 12px;
+      }
+
+      .caged-region-tabs{
+        gap:6px;
+        margin-bottom:12px;
+      }
+
+      .caged-region-tabs button{
+        font-size:11px;
+        padding:6px 8px;
+      }
+
+      .caged-map-area{
+        min-height:390px;
+      }
+
+      .caged-side{
+        gap:10px;
+      }
+
+      .caged-card{
+        min-height:180px;
+        border-radius:24px;
+        padding:14px 10px 14px;
+      }
+
+      .caged-card h3{
+        font-size:28px;
+        margin-bottom:8px;
+      }
+
+      .caged-card .linha{
+        height:7px;
+        margin-bottom:8px;
+      }
+
+      .caged-card .nome{
+        font-size:24px;
+        min-height:48px;
+        margin-bottom:8px;
+      }
+
+      .caged-card .valor{
+        font-size:54px;
+        letter-spacing:-1px;
+      }
+
+      .caged-card .valor small{
+        font-size:16px;
+      }
+
+      .caged-rodape{
+        margin-top:14px;
+      }
+
+      .caged-rodape img{
+        max-width:220px;
+      }
+    }
+
+    @media (max-width: 520px){
+      .caged-map-area{
+        min-height:340px;
+      }
+
+      .caged-card{
+        min-height:165px;
+      }
+
+      .caged-card h3{
+        font-size:24px;
+      }
+
+      .caged-card .nome{
+        font-size:20px;
+      }
+
+      .caged-card .valor{
+        font-size:44px;
+      }
+
+      .caged-card .valor small{
+        font-size:15px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <section class="caged-dashboard">
+
+    <!-- TOPO EM IMAGEM -->
+    <div class="caged-topo">
+      <img src="topo.png" alt="Carteira Assinada - fevereiro de 2026">
+    </div>
+
+    <div class="caged-main">
+
+      <!-- MAPA -->
+      <div class="caged-box caged-map-box">
+        <h2>Mapa Navegável</h2>
+
+        <div class="caged-region-tabs" id="filters">
+          <button class="reg-norte" data-region="Norte">Norte</button>
+          <button class="reg-nordeste" data-region="Nordeste">Nordeste</button>
+          <button class="reg-centro" data-region="Centro-Oeste">Centro-Oeste</button>
+          <button class="reg-sudeste" data-region="Sudeste">Sudeste</button>
+          <button class="reg-sul" data-region="Sul">Sul</button>
+        </div>
+
+        <div class="caged-map-area" id="mapWrap">
+          <svg id="map" viewBox="0 0 900 760" preserveAspectRatio="xMidYMid meet" aria-label="Mapa do Brasil"></svg>
+        </div>
+      </div>
+
+      <!-- CARDS -->
+      <div class="caged-side">
+        <div class="caged-card">
+          <h3>estado</h3>
+          <div class="linha"></div>
+          <div class="nome" id="state-name">Rio de Janeiro</div>
+          <div class="valor" id="state-valor">11.436<small>postos</small></div>
+        </div>
+
+        <div class="caged-card">
+          <h3>Região</h3>
+          <div class="linha"></div>
+          <div class="nome" id="region-name">Sudeste</div>
+          <div class="valor" id="region-valor">133.052<small>postos</small></div>
+        </div>
+      </div>
+
+    </div>
+
+    <div class="caged-rodape">
+      <img src="ass.png" alt="Governo do Brasil">
+    </div>
+  </section>
+
+  <script>
+    const stateData = {
+      const stateData = {
+  AC:{ estado:"Acre", uf:"AC", postos:"848", regiao:"Norte" },
+  AL:{ estado:"Alagoas", uf:"AL", postos:"-75", regiao:"Nordeste" },
+  AP:{ estado:"Amapá", uf:"AP", postos:"567", regiao:"Norte" },
+  AM:{ estado:"Amazonas", uf:"AM", postos:"1.477", regiao:"Norte" },
+  BA:{ estado:"Bahia", uf:"BA", postos:"7.159", regiao:"Nordeste" },
+  CE:{ estado:"Ceará", uf:"CE", postos:"3.421", regiao:"Nordeste" },
+  DF:{ estado:"Distrito Federal", uf:"DF", postos:"1.910", regiao:"Centro-Oeste" },
+  ES:{ estado:"Espírito Santo", uf:"ES", postos:"9.532", regiao:"Sudeste" },
+  GO:{ estado:"Goiás", uf:"GO", postos:"-2.742", regiao:"Centro-Oeste" },
+  MA:{ estado:"Maranhão", uf:"MA", postos:"1.955", regiao:"Nordeste" },
+  MT:{ estado:"Mato Grosso", uf:"MT", postos:"1.069", regiao:"Centro-Oeste" },
+  MS:{ estado:"Mato Grosso do Sul", uf:"MS", postos:"1.779", regiao:"Centro-Oeste" },
+  MG:{ estado:"Minas Gerais", uf:"MG", postos:"8.922", regiao:"Sudeste" },
+  PA:{ estado:"Pará", uf:"PA", postos:"2.490", regiao:"Norte" },
+  PB:{ estado:"Paraíba", uf:"PB", postos:"2.012", regiao:"Nordeste" },
+  PR:{ estado:"Paraná", uf:"PR", postos:"2.210", regiao:"Sul" },
+  PE:{ estado:"Pernambuco", uf:"PE", postos:"5.894", regiao:"Nordeste" },
+  PI:{ estado:"Piauí", uf:"PI", postos:"1.999", regiao:"Nordeste" },
+  RJ:{ estado:"Rio de Janeiro", uf:"RJ", postos:"9.195", regiao:"Sudeste" },
+  RN:{ estado:"Rio Grande do Norte", uf:"RN", postos:"109", regiao:"Nordeste" },
+  RS:{ estado:"Rio Grande do Sul", uf:"RS", postos:"-5.657", regiao:"Sul" },
+  RO:{ estado:"Rondônia", uf:"RO", postos:"293", regiao:"Norte" },
+  RR:{ estado:"Roraima", uf:"RR", postos:"129", regiao:"Norte" },
+  SC:{ estado:"Santa Catarina", uf:"SC", postos:"-662", regiao:"Sul" },
+  SP:{ estado:"São Paulo", uf:"SP", postos:"18.224", regiao:"Sudeste" },
+  SE:{ estado:"Sergipe", uf:"SE", postos:"877", regiao:"Nordeste" },
+  TO:{ estado:"Tocantins", uf:"TO", postos:"-743", regiao:"Norte" }
+};
+    };
+
+    const regionTotals = {
+  "Sudeste":"45.873",
+  "Nordeste":"23.351",
+  "Norte":"5.061",
+  "Centro-Oeste":"2.016",
+  "Sul":"-4.109"
+};
+
+    const regionColors = {
+      "Norte":"#FF2A2A",
+      "Nordeste":"#FFD400",
+      "Centro-Oeste":"#00E000",
+      "Sudeste":"#FFA21A",
+      "Sul":"#1B57FF"
+    };
+
+    const nameToUF = {
+      "Rondônia":"RO","Acre":"AC","Amazonas":"AM","Roraima":"RR","Pará":"PA","Amapá":"AP","Tocantins":"TO",
+      "Maranhão":"MA","Piauí":"PI","Ceará":"CE","Rio Grande do Norte":"RN","Paraíba":"PB","Pernambuco":"PE","Alagoas":"AL","Sergipe":"SE","Bahia":"BA",
+      "Mato Grosso do Sul":"MS","Mato Grosso":"MT","Goiás":"GO","Distrito Federal":"DF",
+      "Minas Gerais":"MG","Espírito Santo":"ES","Rio de Janeiro":"RJ","São Paulo":"SP",
+      "Paraná":"PR","Santa Catarina":"SC","Rio Grande do Sul":"RS"
+    };
+
+    let selectedUF = null;
+    let activeRegion = null;
+
+    const stateName = document.getElementById("state-name");
+    const stateValor = document.getElementById("state-valor");
+    const regionName = document.getElementById("region-name");
+    const regionValor = document.getElementById("region-valor");
+
+    function getUF(feature){
+      const p = feature.properties || {};
+      return (
+        p.sigla ||
+        p.uf ||
+        p.UF ||
+        p.id ||
+        p.codigo_uf ||
+        p.abbrev ||
+        nameToUF[p.name] ||
+        nameToUF[p.nome] ||
+        nameToUF[p.estado] ||
+        null
+      );
+    }
+
+    function resetPanel(){
+  stateName.textContent = "Clique no mapa para visualizar os dados";
+  stateValor.innerHTML = "—<small>postos</small>";
+
+  regionName.textContent = "Clique no mapa para visualizar os dados";
+  regionValor.innerHTML = "—<small>postos</small>";
+}
+
+    function updatePanel(uf){
+      if(!uf || !stateData[uf]) return;
+
+      const state = stateData[uf];
+      stateName.textContent = state.estado;
+      stateValor.innerHTML = `${state.postos}<small>postos</small>`;
+      regionName.textContent = state.regiao;
+      regionValor.innerHTML = `${regionTotals[state.regiao]}<small>postos</small>`;
+    }
+
+    function applyFilter(region){
+      activeRegion = region;
+
+      document.querySelectorAll(".caged-region-tabs button").forEach(btn => {
+        btn.classList.toggle("active", btn.dataset.region === region);
+      });
+
+      d3.selectAll(".state").each(function(){
+        const el = d3.select(this);
+        const uf = el.attr("data-uf");
+        const state = stateData[uf];
+        if(!state) return;
+
+        el.classed("dimmed", state.regiao !== region);
+      });
+    }
+
+    async function drawMap(){
+      const svg = d3.select("#map");
+      const width = 900;
+      const height = 760;
+
+      let geojson;
+      try{
+        geojson = await d3.json("brazil-states.geojson");
+      } catch (error){
+        d3.select("#mapWrap").html('<div class="empty-note">Não consegui carregar o arquivo <strong>brazil-states.geojson</strong>.</div>');
+        console.error(error);
+        return;
+      }
+
+      const features = geojson.features || geojson;
+      if(!features || !features.length){
+        d3.select("#mapWrap").html('<div class="empty-note">O GeoJSON não possui features válidas.</div>');
+        return;
+      }
+
+      const projection = d3.geoMercator().fitSize([width, height], {
+        type:"FeatureCollection",
+        features
+      });
+
+      const path = d3.geoPath(projection);
+      const g = svg.append("g");
+
+      g.selectAll("path")
+        .data(features)
+        .enter()
+        .append("path")
+        .attr("class","state")
+        .attr("data-uf", d => getUF(d))
+        .attr("d", path)
+        .attr("fill", d => {
+          const uf = getUF(d);
+          const region = stateData[uf]?.regiao;
+          return regionColors[region] || "#cccccc";
+        })
+        .attr("stroke", "#ffffff")
+        .attr("stroke-width", 1.5)
+        .on("click", function(event, d){
+          const uf = getUF(d);
+          if(!stateData[uf]) return;
+
+          selectedUF = uf;
+          d3.selectAll(".state").classed("selected", false);
+          d3.select(this).classed("selected", true);
+          updatePanel(uf);
+        });
+
+      g.selectAll("text")
+        .data(features)
+        .enter()
+        .append("text")
+        .attr("class","state-label")
+        .attr("x", d => path.centroid(d)[0])
+        .attr("y", d => path.centroid(d)[1])
+        .text(d => {
+          const uf = getUF(d);
+          return uf || "";
+        });
+
+      resetPanel();
+    }
+
+    document.getElementById("filters").addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-region]");
+      if(!btn) return;
+      applyFilter(btn.dataset.region);
+    });
+
+    drawMap();
+  </script>
+</body>
+</html>
